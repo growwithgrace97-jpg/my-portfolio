@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniGuide — AI Academic Tutor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+<style>
+:root {
+  --bg0: #04050a;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(100,140,255,0.28);
+  --text: #eef0ff;
+  --text2: rgba(195,208,255,0.65);
+  --text3: rgba(155,175,230,0.38);
+  --blue: #4d84ff;
+  --blue2: #7aa8ff;
+  --purple: #9b6bff;
+  --purple2: #c0a0ff;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body {
+  font-family:'Sora',sans-serif;
+  background:var(--bg0);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  font-size:15px;
+  line-height:1.7;
+  overflow-x:hidden;
+}
+/* Background gradient */
+.bg-base {
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% -5%, rgba(77,132,255,0.13) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 105%, rgba(155,107,255,0.11) 0%,transparent 60%),
+    radial-gradient(ellipse 35% 25% at 50% 55%, rgba(77,132,255,0.05) 0%,transparent 65%),
+    #04050a;
+  pointer-events:none;z-index:0;
+}
+/* Grid */
+.bg-grid {
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px);
+  background-size:52px 52px;
+  pointer-events:none;z-index:0;
+  mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,black 20%,transparent 100%);
+}
+/* Vignette */
+.vignette {
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 100% 100% at 50% 50%,transparent 45%,rgba(4,5,10,0.75) 100%);
+  pointer-events:none;z-index:1;
+}
+/* Ambient orbs */
+.orb {
+  position:fixed;border-radius:50%;
+  filter:blur(90px);
+  pointer-events:none;z-index:0;
+}
+.orb1 {
+  width:700px;height:450px;
+  background:radial-gradient(ellipse,rgba(77,132,255,0.09) 0%,transparent 70%);
+  top:-150px;left:-150px;
+  animation:drift1 14s ease-in-out infinite;
+}
+.orb2 {
+  width:550px;height:380px;
+  background:radial-gradient(ellipse,rgba(155,107,255,0.08) 0%,transparent 70%);
+  bottom:-100px;right:-100px;
+  animation:drift2 16s ease-in-out infinite;
+}
+.orb3 {
+  width:320px;height:260px;
+  background:radial-gradient(ellipse,rgba(77,132,255,0.055) 0%,transparent 70%);
+  top:45%;left:55%;
+  animation:drift1 18s ease-in-out infinite reverse;
+}
+@keyframes drift1 {
+  0%,100%{transform:translate(0,0)}
+  40%{transform:translate(40px,-25px)}
+  70%{transform:translate(-20px,35px)}
+}
+@keyframes drift2 {
+  0%,100%{transform:translate(0,0)}
+  35%{transform:translate(-35px,20px)}
+  65%{transform:translate(25px,-30px)}
+}
+header,main{position:relative;z-index:10}
+
+/* NAVBAR */
+header {
+  position:sticky;top:0;z-index:100;
+  background:rgba(4,5,10,0.55);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  padding:0 2rem;
+  height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo {
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+}
+.logo-mark {
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(77,132,255,0.4),0 0 36px rgba(155,107,255,0.18);
+  flex-shrink:0;
+  position:relative;
+}
+.logo-mark::after {
+  content:'';position:absolute;inset:-1px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);
+  pointer-events:none;
+}
+.logo-mark svg{width:19px;height:19px;position:relative}
+.logo-text {
+  font-family:'Sora',sans-serif;
+  font-size:17px;font-weight:600;
+  color:var(--text);letter-spacing:-0.4px;
+}
+.logo-text span {
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.subject-pills{display:flex;gap:6px}
+.pill {
+  font-size:11.5px;font-weight:500;
+  padding:5px 13px;border-radius:20px;
+  background:rgba(255,255,255,0.04);
+  color:var(--text2);
+  border:1px solid var(--border);
+  cursor:pointer;transition:all 0.2s ease;
+  white-space:nowrap;
+}
+.pill:hover {
+  background:rgba(77,132,255,0.1);
+  color:var(--blue2);
+  border-color:rgba(77,132,255,0.28);
+  box-shadow:0 0 14px rgba(77,132,255,0.15);
+}
+
+/* MAIN */
+main {
+  flex:1;display:flex;flex-direction:column;
+  max-width:780px;width:100%;
+  margin:0 auto;padding:0 1.25rem;
+}
+
+/* WELCOME */
+.welcome {
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:6rem 1rem 3rem;
+  text-align:center;
+}
+.welcome-badge {
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:500;
+  color:var(--blue2);
+  background:rgba(77,132,255,0.08);
+  border:1px solid rgba(77,132,255,0.16);
+  padding:5px 15px;border-radius:20px;
+  margin-bottom:1.75rem;letter-spacing:0.3px;
+  animation:fadeUp 0.5s ease 0.1s both;
+}
+.badge-dot {
+  width:6px;height:6px;
+  background:var(--blue);border-radius:50%;
+  box-shadow:0 0 8px var(--blue);
+  animation:pulseDot 2s ease infinite;
+}
+@keyframes pulseDot{0%,100%{opacity:1;box-shadow:0 0 8px var(--blue)}50%{opacity:0.4;box-shadow:0 0 16px var(--blue)}}
+
+/* Floating icon */
+.welcome-icon {
+  width:84px;height:84px;
+  background:linear-gradient(135deg,rgba(77,132,255,0.12),rgba(155,107,255,0.1));
+  border:1px solid rgba(77,132,255,0.18);
+  border-radius:26px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:2.5rem;
+  box-shadow:0 0 0 1px rgba(77,132,255,0.08),0 0 32px rgba(77,132,255,0.18),0 0 64px rgba(155,107,255,0.09),inset 0 1px 0 rgba(255,255,255,0.07);
+  animation:floatIcon 4.5s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.welcome-icon::before {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.06),transparent 50%);
+  border-radius:inherit;
+}
+@keyframes floatIcon {
+  0%,100%{transform:translateY(0);box-shadow:0 0 32px rgba(77,132,255,0.18),0 0 64px rgba(155,107,255,0.09)}
+  50%{transform:translateY(-12px);box-shadow:0 24px 48px rgba(77,132,255,0.14),0 0 80px rgba(155,107,255,0.14)}
+}
+.welcome h1 {
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2.5rem,6vw,3.8rem);
+  line-height:1.1;letter-spacing:-1.2px;
+  margin-bottom:1rem;
+  color:var(--text);
+  text-shadow:0 0 80px rgba(77,132,255,0.1);
+  animation:fadeUp 0.5s ease 0.2s both;
+}
+.welcome h1 em {
+  font-style:italic;
+  background:linear-gradient(110deg,var(--blue) 0%,var(--purple) 50%,var(--blue2) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:gradShift 4s ease infinite;
+  filter:drop-shadow(0 0 24px rgba(77,132,255,0.45));
+  text-shadow:none;
+}
+@keyframes gradShift{0%,100%{background-position:0% center}50%{background-position:100% center}}
+.welcome p {
+  font-size:15.5px;color:var(--text2);
+  max-width:440px;margin-bottom:3.25rem;
+  font-weight:300;line-height:1.8;
+  animation:fadeUp 0.5s ease 0.3s both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* Example cards */
+.example-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(178px,1fr));
+  gap:10px;width:100%;max-width:590px;
+  margin-bottom:2.5rem;
+  animation:fadeUp 0.55s ease 0.4s both;
+}
+.example-card {
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:17px 19px;
+  cursor:pointer;text-align:left;
+  transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(8px);
+}
+.example-card::before {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(77,132,255,0.07),rgba(155,107,255,0.04));
+  opacity:0;transition:opacity 0.3s ease;
+}
+.example-card::after {
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(77,132,255,0.3),transparent);
+  opacity:0;transition:opacity 0.3s ease;
+}
+.example-card:hover {
+  border-color:rgba(77,132,255,0.32);
+  transform:translateY(-5px) scale(1.01);
+  box-shadow:0 8px 32px rgba(77,132,255,0.13),0 0 0 1px rgba(77,132,255,0.1),0 24px 48px rgba(0,0,0,0.35);
+}
+.example-card:hover::before,.example-card:hover::after{opacity:1}
+.ex-subject {
+  font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;position:relative;
+}
+.ex-q {
+  font-size:13px;color:var(--text2);
+  line-height:1.45;font-weight:400;position:relative;
+}
+
+/* CHAT */
+.chat-area {
+  flex:1;padding:2.25rem 0 0;
+  display:flex;flex-direction:column;gap:1.75rem;
+}
+.msg {
+  display:flex;gap:14px;
+  animation:msgIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes msgIn{from{opacity:0;transform:translateY(16px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.msg.user{flex-direction:row-reverse}
+.avatar {
+  width:34px;height:34px;
+  border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;margin-top:3px;
+  letter-spacing:0.3px;
+}
+.avatar.ai {
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:white;
+  box-shadow:0 0 14px rgba(77,132,255,0.4),0 0 28px rgba(155,107,255,0.18);
+}
+.avatar.user-av {
+  background:rgba(255,255,255,0.055);
+  color:var(--text2);
+  border:1px solid var(--border);
+}
+.bubble{flex:1;min-width:0}
+.msg.user .bubble{display:flex;justify-content:flex-end}
+.bubble-inner {
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:17px 21px;
+  font-size:14.5px;line-height:1.72;
+  max-width:100%;
+  backdrop-filter:blur(12px);
+  position:relative;overflow:hidden;
+}
+.bubble-inner::before {
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+  pointer-events:none;
+}
+.msg.user .bubble-inner {
+  background:linear-gradient(135deg,rgba(77,132,255,0.16),rgba(155,107,255,0.1));
+  border-color:rgba(77,132,255,0.22);
+  max-width:78%;
+  box-shadow:0 4px 20px rgba(77,132,255,0.1);
+}
+
+/* Markdown */
+.bubble-inner h3 {
+  font-family:'Sora',sans-serif;
+  font-size:14px;font-weight:600;
+  margin:1.3rem 0 0.5rem;color:var(--text);
+  letter-spacing:-0.1px;
+}
+.bubble-inner h3:first-child{margin-top:0}
+.bubble-inner p{margin-bottom:0.65rem}
+.bubble-inner p:last-child{margin-bottom:0}
+.bubble-inner ul,.bubble-inner ol{padding-left:1.4rem;margin-bottom:0.7rem}
+.bubble-inner li{margin-bottom:0.35rem}
+.bubble-inner strong{font-weight:600;color:var(--text)}
+.bubble-inner em{font-style:italic}
+.bubble-inner code {
+  font-family:'Fira Code','Courier New',monospace;
+  font-size:12.5px;
+  background:rgba(77,132,255,0.09);
+  color:var(--blue2);
+  padding:2px 7px;border-radius:5px;
+  border:1px solid rgba(77,132,255,0.13);
+}
+.bubble-inner pre {
+  background:rgba(0,0,0,0.4);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px 16px;overflow-x:auto;
+  margin:0.75rem 0;font-size:13px;line-height:1.6;
+}
+.bubble-inner pre code{background:none;border:none;padding:0;color:var(--text2)}
+.bubble-inner table{width:100%;border-collapse:collapse;margin:0.85rem 0;font-size:13px}
+.bubble-inner th {
+  background:rgba(77,132,255,0.08);
+  font-weight:600;padding:9px 13px;
+  text-align:left;border:1px solid var(--border);
+  font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--blue2);
+}
+.bubble-inner td{padding:9px 13px;border:1px solid var(--border);vertical-align:top;color:var(--text2)}
+.bubble-inner tr:nth-child(even) td{background:rgba(255,255,255,0.02)}
+.bubble-inner blockquote {
+  border-left:2px solid var(--blue);
+  background:rgba(77,132,255,0.06);
+  padding:10px 16px;margin:0.85rem 0;
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  color:var(--text2);font-size:14px;
+}
+.bubble-inner hr{border:none;border-top:1px solid var(--border);margin:0.85rem 0}
+
+/* Phase badges */
+.phase-badge {
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.6px;
+  padding:4px 11px;border-radius:20px;
+  margin:0.6rem 0 0.3rem;
+}
+.phase-setup{background:rgba(77,132,255,0.1);color:var(--blue2);border:1px solid rgba(77,132,255,0.16)}
+.phase-execute{background:rgba(251,191,36,0.09);color:var(--amber);border:1px solid rgba(251,191,36,0.14)}
+.phase-verify{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.15)}
+
+/* Takeaway */
+.takeaway-block {
+  background:rgba(77,132,255,0.05);
+  border:1px solid rgba(77,132,255,0.15);
+  border-radius:var(--radius);
+  padding:16px 20px;margin-top:1rem;
+  position:relative;overflow:hidden;
+}
+.takeaway-block::before {
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--blue),var(--purple));
+}
+.takeaway-title {
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:9px;
+}
+
+/* Follow-up */
+.followup-block {
+  background:rgba(251,191,36,0.05);
+  border:1px solid rgba(251,191,36,0.12);
+  border-radius:var(--radius);
+  padding:14px 20px;margin-top:0.85rem;
+}
+.followup-title {
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;
+  color:var(--amber);margin-bottom:7px;
+}
+.followup-block p{font-size:14px;color:var(--text2);font-style:italic;margin:0 !important}
+
+/* Typing */
+.typing{display:flex;gap:5px;padding:10px 14px;align-items:center}
+.typing-dot {
+  width:6px;height:6px;background:var(--blue);
+  border-radius:50%;opacity:0.5;
+  animation:typingB 1.2s ease infinite;
+  box-shadow:0 0 8px rgba(77,132,255,0.5);
+}
+.typing-dot:nth-child(2){animation-delay:0.2s}
+.typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes typingB{0%,80%,100%{transform:scale(1);opacity:0.35}40%{transform:scale(1.45);opacity:1}}
+
+/* INPUT */
+.input-area {
+  position:sticky;bottom:0;z-index:50;
+  background:linear-gradient(to top,var(--bg0) 55%,transparent);
+  padding:1.25rem 0 1.5rem;
+  margin-top:auto;
+}
+.input-wrap {
+  display:flex;gap:10px;align-items:flex-end;
+  background:rgba(8,12,28,0.88);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:12px 12px 12px 20px;
+  backdrop-filter:blur(24px);
+  transition:border-color 0.22s ease,box-shadow 0.22s ease;
+  box-shadow:0 4px 24px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.input-wrap:focus-within {
+  border-color:rgba(77,132,255,0.4);
+  box-shadow:0 0 0 3px rgba(77,132,255,0.07),0 4px 24px rgba(0,0,0,0.45),0 0 24px rgba(77,132,255,0.08);
+}
+#question-input {
+  flex:1;border:none;outline:none;background:transparent;
+  color:var(--text);font-family:'Sora',sans-serif;
+  font-size:14.5px;resize:none;
+  min-height:24px;max-height:140px;line-height:1.6;overflow-y:auto;
+}
+#question-input::placeholder{color:var(--text3)}
+.input-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.level-select {
+  font-family:'Sora',sans-serif;font-size:12px;
+  color:var(--text2);background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:10px;
+  padding:6px 10px;cursor:pointer;outline:none;
+  appearance:none;-webkit-appearance:none;
+  transition:border-color 0.2s;
+}
+.level-select:focus{border-color:var(--border-bright)}
+.level-select option{background:#0a0e1c;color:var(--text)}
+.send-btn {
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.2s ease;color:white;
+  box-shadow:0 0 14px rgba(77,132,255,0.32);
+}
+.send-btn:hover{
+  transform:scale(1.07);
+  box-shadow:0 0 24px rgba(77,132,255,0.55),0 0 48px rgba(155,107,255,0.22);
+}
+.send-btn:active{transform:scale(0.94)}
+.send-btn:disabled{
+  background:rgba(255,255,255,0.06);color:var(--text3);
+  cursor:default;transform:none;box-shadow:none;
+}
+.input-hint{font-size:11px;color:var(--text3);margin-top:9px;text-align:center;letter-spacing:0.2px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:10px}
+
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity 0.55s ease,transform 0.55s cubic-bezier(0.16,1,0.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* Mobile */
+@media(max-width:620px){
+  header{padding:0 1rem}
+  .subject-pills{display:none}
+  .welcome{padding:3.5rem 0.5rem 2.5rem}
+  .welcome h1{font-size:2.1rem;letter-spacing:-0.5px}
+  .example-grid{grid-template-columns:1fr 1fr}
+  .level-select{display:none}
+  .input-area{padding:1rem 0 1.25rem}
+  .chat-area{gap:1.4rem}
+  .msg.user .bubble-inner{max-width:88%}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-base"></div>
+<div class="bg-grid"></div>
+<div class="vignette"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="7" stroke="white" stroke-width="1.4"/>
+        <path d="M5.5 9h7M9 5.5v7" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="9" cy="9" r="2" fill="white"/>
+      </svg>
+    </div>
+    <span class="logo-text">Omni<span>Guide</span></span>
+  </a>
+  <div class="subject-pills">
+    <span class="pill" onclick="insertExample('Explain the quadratic formula and solve x² - 5x + 6 = 0')">Math</span>
+    <span class="pill" onclick="insertExample('Explain Newton\'s second law with a real example')">Physics</span>
+    <span class="pill" onclick="insertExample('Difference between mitosis and meiosis?')">Biology</span>
+    <span class="pill" onclick="insertExample('Themes of justice in The Merchant of Venice')">Lit</span>
+    <span class="pill" onclick="insertExample('How does a galvanic cell work?')">Chem</span>
+  </div>
+</header>
+
+<main>
+  <div id="welcome" class="welcome">
+    <div class="welcome-badge">
+      <div class="badge-dot"></div>
+      AI-Powered Tutor &middot; Every Subject
+    </div>
+    <div class="welcome-icon">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <path d="M10 13h18M10 19.5h12M10 26h15" stroke="white" stroke-width="1.9" stroke-linecap="round"/>
+        <circle cx="29" cy="26" r="6.5" stroke="white" stroke-width="1.9"/>
+        <path d="M33.5 30.5l3.2 3.2" stroke="white" stroke-width="1.9" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>Your personal<br><em>thinking partner</em></h1>
+    <p>Ask anything across every subject. I won't hand you the answer — I'll help you genuinely understand it, step by step.</p>
+
+    <div class="example-grid">
+      <div class="example-card reveal" onclick="insertExample('Explain the quadratic formula and solve x² + 5x + 6 = 0 step by step')">
+        <div class="ex-subject">Math</div>
+        <div class="ex-q">Solve a quadratic equation step by step</div>
+      </div>
+      <div class="example-card reveal" onclick="insertExample('Explain Newton\'s laws of motion with real-world examples')">
+        <div class="ex-subject">Physics</div>
+        <div class="ex-q">Newton's laws with real examples</div>
+      </div>
+      <div class="example-card reveal" onclick="insertExample('What caused World War I? Walk me through the main factors')">
+        <div class="ex-subject">History</div>
+        <div class="ex-q">What actually caused World War I?</div>
+      </div>
+      <div class="example-card reveal" onclick="insertExample('Explain how DNA replication works in simple terms')">
+        <div class="ex-subject">Biology</div>
+        <div class="ex-q">How does DNA replication work?</div>
+      </div>
+      <div class="example-card reveal" onclick="insertExample('Explain derivatives in calculus — what does dy/dx actually mean?')">
+        <div class="ex-subject">Calculus</div>
+        <div class="ex-q">What does a derivative actually mean?</div>
+      </div>
+      <div class="example-card reveal" onclick="insertExample('How does titration work? What is the equivalence point?')">
+        <div class="ex-subject">Chemistry</div>
+        <div class="ex-q">How does titration work?</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chat" class="chat-area" style="display:none;"></div>
+
+  <div class="input-area">
+    <div class="input-wrap">
+      <textarea
+        id="question-input"
+        placeholder="Ask anything — math, science, history, literature…"
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <div class="input-actions">
+        <select class="level-select" id="level-select" title="Your level">
+          <option value="auto">Auto level</option>
+          <option value="elementary">Elementary</option>
+          <option value="middle">Middle school</option>
+          <option value="high">High school</option>
+          <option value="college">College</option>
+          <option value="grad">Graduate</option>
+        </select>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled title="Send">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 13V3M3 8l5-5 5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="input-hint">Enter to send &middot; Shift+Enter for new line</div>
+  </div>
+</main>
+
+<script>
+window.MathJax = {
+  tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']],processEscapes:true},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre'],processHtmlClass:'bubble-inner'},
+  startup:{typeset:false}
+};
+
+const API_URL = "https://api.anthropic.com/v1/messages";
+const input = document.getElementById('question-input');
+const sendBtn = document.getElementById('send-btn');
+const chatEl = document.getElementById('chat');
+const welcomeEl = document.getElementById('welcome');
+const levelSelect = document.getElementById('level-select');
+let messages = [];
+
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e,i) => { if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'), i*70); });
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+input.addEventListener('input',()=>{ sendBtn.disabled = input.value.trim().length===0; });
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,140)+'px';
+}
+
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); if(!sendBtn.disabled) sendMessage(); }
+}
+
+function insertExample(text){
+  input.value=text;
+  input.dispatchEvent(new Event('input'));
+  autoResize(input);
+  input.focus();
+}
+
+function showChat(){
+  welcomeEl.style.display='none';
+  chatEl.style.display='flex';
+}
+
+function appendMsg(role, html, isRaw=false){
+  showChat();
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  const av=document.createElement('div');
+  av.className=`avatar ${role==='user'?'user-av':'ai'}`;
+  av.textContent=role==='user'?'You':'OG';
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  const inner=document.createElement('div');
+  inner.className='bubble-inner';
+  if(isRaw) inner.innerHTML=html; else inner.textContent=html;
+  bubble.appendChild(inner);
+  div.appendChild(av);
+  div.appendChild(bubble);
+  chatEl.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'end'});
+  return inner;
+}
+
+function showTyping(){
+  const div=document.createElement('div');
+  div.className='msg ai';div.id='typing-indicator';
+  const av=document.createElement('div');
+  av.className='avatar ai';av.textContent='OG';
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  const inner=document.createElement('div');
+  inner.className='bubble-inner';
+  inner.innerHTML='<div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  bubble.appendChild(inner);div.appendChild(av);div.appendChild(bubble);
+  chatEl.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'end'});
+}
+
+function removeTyping(){
+  const t=document.getElementById('typing-indicator');
+  if(t)t.remove();
+}
+
+function renderMarkdown(text){
+  const lb=[];let p=text;
+  p=p.replace(/\$\$([\s\S]+?)\$\$/g,(m,i)=>{lb.push(`$$${i}$$`);return`LBLOCK_${lb.length-1}`});
+  p=p.replace(/\$([^$\n]+?)\$/g,(m,i)=>{lb.push(`$${i}$`);return`LINLINE_${lb.length-1}`});
+  let html=marked.parse(p,{breaks:true,gfm:true});
+  html=html.replace(/LBLOCK_(\d+)/g,(m,i)=>lb[i]);
+  html=html.replace(/LINLINE_(\d+)/g,(m,i)=>lb[i]);
+  html=html.replace(/<strong>\[Setup\]<\/strong>/g,'<span class="phase-badge phase-setup">⚙ Setup</span>');
+  html=html.replace(/<strong>\[Execution\]<\/strong>/g,'<span class="phase-badge phase-execute">▶ Execution</span>');
+  html=html.replace(/<strong>\[Verify\]<\/strong>/g,'<span class="phase-badge phase-verify">✓ Verify</span>');
+  html=html.replace(/<h3>Key Takeaways<\/h3>([\s\S]+?)(?=<h3>|<div class="followup|$)/,(m,c)=>`<div class="takeaway-block"><div class="takeaway-title">★ Key Takeaways</div>${c}</div>`);
+  html=html.replace(/<h3>Follow-up Challenge<\/h3>([\s\S]+?)(?=<h3>|$)/,(m,c)=>`<div class="followup-block"><div class="followup-title">🤔 Challenge Yourself</div>${c}</div>`);
+  return html;
+}
+
+async function sendMessage(){
+  const text=input.value.trim();
+  if(!text)return;
+  const level=levelSelect.value;
+  input.value='';input.style.height='auto';sendBtn.disabled=true;
+  appendMsg('user',text);
+  messages.push({role:'user',content:text});
+  showTyping();
+
+  const lmap={
+    auto:"Detect level from the question. If genuinely unclear, ask one brief question before answering.",
+    elementary:"Warm, simple language. Short sentences. Fun analogies. Teach a curious 10-year-old.",
+    middle:"Clear and encouraging. Relatable examples. Introduce terminology with explanations.",
+    high:"Precise and thorough. Correct notation. Challenge them to think deeper.",
+    college:"Rigorous. Reference underlying theory. Formal notation. Assume calculus background.",
+    grad:"Expert-level. Advanced theory, edge cases, connections to research."
+  };
+
+  const system=`You are OmniGuide, an expert AI academic tutor covering every subject — math, physics, literature, chemistry, history, CS, economics, and more.
+
+PHILOSOPHY: Never give the answer directly. Guide students through genuine thinking. Be a great teacher, not a calculator.
+
+LEVEL: ${lmap[level]}
+
+STRUCTURE — always follow this for substantive questions:
+1. **Identify the core concept** — the key principle or formula (1–2 sentences).
+2. **[Setup]** — define variables, what we know, what we need.
+3. **[Execution]** — numbered step-by-step working.
+4. **[Verify]** — check the answer, validate units/logic.
+5. ### Key Takeaways
+   Bullet points: the *why*, not just the steps.
+6. ### Follow-up Challenge
+   ONE sharp question on the hardest concept. Force real thought, not recall.
+
+MATH: LaTeX always — $...$ inline, $$...$$ display.
+FORMAT: Markdown — bullets, numbered steps, **bold** key terms, tables when useful. No walls of text.
+TONE: Auto-adapt. Warm for beginners, rigorous for advanced.`;
+
+  try{
+    const resp=await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system,messages})
+    });
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'API error')}
+    const data=await resp.json();
+    const reply=data.content.map(c=>c.text||'').join('');
+    messages.push({role:'assistant',content:reply});
+    removeTyping();
+    const inner=appendMsg('ai',renderMarkdown(reply),true);
+    if(window.MathJax) setTimeout(()=>MathJax.typesetPromise([inner]).catch(()=>{}),60);
+  }catch(err){
+    removeTyping();
+    appendMsg('ai',`Something went wrong: ${err.message}. Please try again.`);
+  }
+}
+</script>
+</body>
+</html>
